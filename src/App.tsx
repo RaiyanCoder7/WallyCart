@@ -1,22 +1,31 @@
 import { useEffect, useState } from "react";
+
 import products from "./data/products";
 import ProductList from "./components/ProductList";
 import AROverlay from "./components/AROverlay";
 import Cart from "./components/Cart";
 import ChatBot from "./components/ChatBot";
 import Navbar from "./components/Navbar";
+
+import type { Product, CartItem, ChatMessage } from "./types";
+
 import "./index.css";
 
 function App() {
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] =
+    useState<Product | null>(null);
 
-  const [cartItems, setCartItems] = useState(() => {
-    const savedCart = localStorage.getItem("wallycart-cart");
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    try {
+      const savedCart = localStorage.getItem("wallycart-cart");
 
-    return savedCart ? JSON.parse(savedCart) : [];
+      return savedCart ? (JSON.parse(savedCart) as CartItem[]) : [];
+    } catch {
+      return [];
+    }
   });
 
-  const [chatMessages, setChatMessages] = useState([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   // Persist cart whenever it changes
   useEffect(() => {
@@ -26,11 +35,11 @@ function App() {
     );
   }, [cartItems]);
 
-  const handleProductClick = (product) => {
+  const handleProductClick = (product: Product): void => {
     setSelectedProduct(product);
   };
 
-  const addToCart = (product) => {
+  const addToCart = (product: Product): void => {
     setCartItems((prev) => {
       const existingItem = prev.find(
         (item) => item.id === product.id
@@ -48,7 +57,7 @@ function App() {
     });
   };
 
-  const handleChat = (msg) => {
+  const handleChat = (msg: string): void => {
     const reply = getBotReply(msg);
 
     setChatMessages((prev) => [
@@ -57,30 +66,30 @@ function App() {
     ]);
   };
 
-  const getBotReply = (msg) => {
-    msg = msg.toLowerCase();
+  const getBotReply = (msg: string): string => {
+    const message = msg.toLowerCase();
 
-    if (msg.includes("healthy")) {
+    if (message.includes("healthy")) {
       return "Try Organic Apple or Low-Fat Milk!";
     }
 
-    if (msg.includes("offer")) {
+    if (message.includes("offer")) {
       return "Bread has BOGO. Chocolate has ₹10 off!";
     }
 
-    if (msg.includes("milk")) {
+    if (message.includes("milk")) {
       return "Low-Fat Milk is available at ₹25!";
     }
 
-    if (msg.includes("recommend")) {
+    if (message.includes("recommend")) {
       return "Looking for a treat? Go for Sugar-Free Dark Chocolate.";
     }
 
-    if (msg.includes("hello") || msg.includes("hi")) {
+    if (message.includes("hello") || message.includes("hi")) {
       return "Hi there! Need help finding something?";
     }
 
-    if (msg.includes("cart")) {
+    if (message.includes("cart")) {
       return "Check the Cart section for all added items.";
     }
 
@@ -94,9 +103,7 @@ function App() {
       <main className="main-content">
         <div className="main-grid">
           <div className="section">
-            <h2 className="section-title blue">
-              Products
-            </h2>
+            <h2 className="section-title blue">Products</h2>
 
             <ProductList
               products={products}
@@ -105,9 +112,7 @@ function App() {
           </div>
 
           <div className="section">
-            <h2 className="section-title purple">
-              Smart Preview
-            </h2>
+            <h2 className="section-title purple">Smart Preview</h2>
 
             <AROverlay
               product={selectedProduct}

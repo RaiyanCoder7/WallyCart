@@ -1,6 +1,13 @@
 import { FaShoppingCart, FaTrash } from "react-icons/fa";
+import type { Dispatch, SetStateAction } from "react";
+import type { CartItem } from "../types";
 
-const Cart = ({ items, setCartItems }) => {
+interface CartProps {
+  items: CartItem[];
+  setCartItems: Dispatch<SetStateAction<CartItem[]>>;
+}
+
+const Cart = ({ items, setCartItems }: CartProps) => {
   const isEmpty = items.length === 0;
 
   const totalItems = items.reduce(
@@ -13,7 +20,7 @@ const Cart = ({ items, setCartItems }) => {
     0
   );
 
-  const updateQuantity = (id, change) => {
+  const updateQuantity = (id: number, change: number): void => {
     setCartItems((prev) =>
       prev
         .map((item) =>
@@ -25,7 +32,7 @@ const Cart = ({ items, setCartItems }) => {
     );
   };
 
-  const removeItem = (id) => {
+  const removeItem = (id: number): void => {
     setCartItems((prev) =>
       prev.filter((item) => item.id !== id)
     );
@@ -35,6 +42,7 @@ const Cart = ({ items, setCartItems }) => {
     <div className="cart-container">
       <div className="cart-header">
         <FaShoppingCart className="cart-icon" />
+
         <h2>Your Cart ({totalItems})</h2>
       </div>
 
@@ -46,15 +54,23 @@ const Cart = ({ items, setCartItems }) => {
         <>
           <ul className="cart-items">
             {items.map((item) => (
-              <li key={item.id} className="cart-item">
+              <li
+                key={item.id}
+                className="cart-item"
+              >
                 <div>
                   <strong>{item.name}</strong>
-                  <p>₹{item.price} × {item.quantity}</p>
+
+                  <p>
+                    ₹{item.price} × {item.quantity}
+                  </p>
                 </div>
 
                 <div className="cart-item-actions">
                   <button
-                    onClick={() => updateQuantity(item.id, -1)}
+                    onClick={() =>
+                      updateQuantity(item.id, -1)
+                    }
                     aria-label={`Decrease ${item.name} quantity`}
                   >
                     -
@@ -63,7 +79,9 @@ const Cart = ({ items, setCartItems }) => {
                   <span>{item.quantity}</span>
 
                   <button
-                    onClick={() => updateQuantity(item.id, 1)}
+                    onClick={() =>
+                      updateQuantity(item.id, 1)
+                    }
                     aria-label={`Increase ${item.name} quantity`}
                   >
                     +
@@ -77,7 +95,9 @@ const Cart = ({ items, setCartItems }) => {
                   </button>
                 </div>
 
-                <strong>₹{item.price * item.quantity}</strong>
+                <strong>
+                  ₹{item.price * item.quantity}
+                </strong>
               </li>
             ))}
           </ul>
