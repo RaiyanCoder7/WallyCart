@@ -1,49 +1,29 @@
-import { FaShoppingCart, FaTrash } from "react-icons/fa";
-import type { Dispatch, SetStateAction } from "react";
-import type { CartItem } from "../types";
+import {
+  FaShoppingCart,
+  FaTrash,
+} from "react-icons/fa";
 
-interface CartProps {
-  items: CartItem[];
-  setCartItems: Dispatch<SetStateAction<CartItem[]>>;
-}
+import { useCart } from "../context/CartContext";
 
-const Cart = ({ items, setCartItems }: CartProps) => {
-  const isEmpty = items.length === 0;
+const Cart = () => {
+  const {
+    cartItems,
+    updateQuantity,
+    removeItem,
+    totalItems,
+    total,
+  } = useCart();
 
-  const totalItems = items.reduce(
-    (sum, item) => sum + item.quantity,
-    0
-  );
-
-  const total = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-
-  const updateQuantity = (id: number, change: number): void => {
-    setCartItems((prev) =>
-      prev
-        .map((item) =>
-          item.id === id
-            ? { ...item, quantity: item.quantity + change }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  };
-
-  const removeItem = (id: number): void => {
-    setCartItems((prev) =>
-      prev.filter((item) => item.id !== id)
-    );
-  };
+  const isEmpty = cartItems.length === 0;
 
   return (
     <div className="cart-container">
       <div className="cart-header">
         <FaShoppingCart className="cart-icon" />
 
-        <h2>Your Cart ({totalItems})</h2>
+        <h2>
+          Your Cart ({totalItems})
+        </h2>
       </div>
 
       {isEmpty ? (
@@ -53,34 +33,47 @@ const Cart = ({ items, setCartItems }: CartProps) => {
       ) : (
         <>
           <ul className="cart-items">
-            {items.map((item) => (
+            {cartItems.map((item) => (
               <li
                 key={item.id}
                 className="cart-item"
               >
                 <div>
-                  <strong>{item.name}</strong>
+                  <strong>
+                    {item.name}
+                  </strong>
 
                   <p>
-                    ₹{item.price} × {item.quantity}
+                    ₹{item.price} ×{" "}
+                    {item.quantity}
                   </p>
                 </div>
 
                 <div className="cart-item-actions">
                   <button
+                    type="button"
                     onClick={() =>
-                      updateQuantity(item.id, -1)
+                      updateQuantity(
+                        item.id,
+                        -1
+                      )
                     }
                     aria-label={`Decrease ${item.name} quantity`}
                   >
                     -
                   </button>
 
-                  <span>{item.quantity}</span>
+                  <span>
+                    {item.quantity}
+                  </span>
 
                   <button
+                    type="button"
                     onClick={() =>
-                      updateQuantity(item.id, 1)
+                      updateQuantity(
+                        item.id,
+                        1
+                      )
                     }
                     aria-label={`Increase ${item.name} quantity`}
                   >
@@ -88,7 +81,10 @@ const Cart = ({ items, setCartItems }: CartProps) => {
                   </button>
 
                   <button
-                    onClick={() => removeItem(item.id)}
+                    type="button"
+                    onClick={() =>
+                      removeItem(item.id)
+                    }
                     aria-label={`Remove ${item.name}`}
                   >
                     <FaTrash />
@@ -96,14 +92,18 @@ const Cart = ({ items, setCartItems }: CartProps) => {
                 </div>
 
                 <strong>
-                  ₹{item.price * item.quantity}
+                  ₹
+                  {item.price *
+                    item.quantity}
                 </strong>
               </li>
             ))}
           </ul>
 
           <div className="cart-total">
-            <strong>Total: ₹{total}</strong>
+            <strong>
+              Total: ₹{total}
+            </strong>
           </div>
         </>
       )}
