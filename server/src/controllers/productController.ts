@@ -1,6 +1,7 @@
 
 import type { Request, Response } from "express";
 import Product from "../models/Product.js";
+import { Types } from "mongoose";
 import { createProductSchema } from "../validators/productValidator.js";
 
 export const getProducts = async (
@@ -32,7 +33,17 @@ export const getProductById = async (
   res: Response
 ): Promise<void> => {
   try {
-    const product = await Product.findById(req.params.id);
+    const productId = req.params.id;
+
+    if (typeof productId !== "string" || !Types.ObjectId.isValid(productId)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid product ID.",
+      });
+      return;
+    }
+
+    const product = await Product.findById(productId);
 
     if (!product) {
       res.status(404).json({
@@ -61,6 +72,16 @@ export const updateProduct = async (
   res: Response
 ): Promise<void> => {
   try {
+    const productId = req.params.id;
+
+    if (typeof productId !== "string" || !Types.ObjectId.isValid(productId)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid product ID.",
+      });
+      return;
+    }
+
     const result = createProductSchema.safeParse(req.body);
 
     if (!result.success) {
@@ -112,6 +133,16 @@ export const deleteProduct = async (
   res: Response
 ): Promise<void> => {
   try {
+    const productId = req.params.id;
+
+    if (typeof productId !== "string" || !Types.ObjectId.isValid(productId)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid product ID.",
+      });
+      return;
+    }
+    
     const product = await Product.findByIdAndDelete(req.params.id);
 
     if (!product) {
