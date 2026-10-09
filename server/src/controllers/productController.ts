@@ -5,11 +5,22 @@ import { Types } from "mongoose";
 import { createProductSchema } from "../validators/productValidator.js";
 
 export const getProducts = async (
-  _req: Request,
+  req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const products = await Product.find().sort({
+    const { search } = req.query;
+
+    const filter: Record<string, unknown> = {};
+
+    if (typeof search === "string" && search.trim()) {
+      filter.name = {
+        $regex: search.trim(),
+        $options: "i",
+      };
+    }
+
+    const products = await Product.find(filter).sort({
       createdAt: -1,
     });
 
