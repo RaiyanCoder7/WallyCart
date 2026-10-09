@@ -9,7 +9,7 @@ export const getProducts = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { search, category, minPrice, maxPrice } = req.query;
+    const { search, category, minPrice, maxPrice, sort } = req.query;
 
     const filter: Record<string, unknown> = {};
 
@@ -68,9 +68,21 @@ export const getProducts = async (
       filter.price = priceFilter;
     }
 
-    const products = await Product.find(filter).sort({
+    let sortOption: Record<string, 1 | -1> = {
       createdAt: -1,
-    });
+    };
+
+    if (sort === "price_asc") {
+      sortOption = { price: 1 };
+    } else if (sort === "price_desc") {
+      sortOption = { price: -1 };
+    } else if (sort === "name_asc") {
+      sortOption = { name: 1 };
+    } else if (sort === "healthScore_desc") {
+      sortOption = { healthScore: -1 };
+    }
+
+    const products = await Product.find(filter).sort(sortOption);
 
     res.status(200).json({
       success: true,
