@@ -9,7 +9,7 @@ export const getProducts = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { search } = req.query;
+    const { search, category } = req.query;
 
     const filter: Record<string, unknown> = {};
 
@@ -18,6 +18,10 @@ export const getProducts = async (
         $regex: search.trim(),
         $options: "i",
       };
+    }
+
+    if (typeof category === "string" && category.trim()) {
+      filter.category = category.trim();
     }
 
     const products = await Product.find(filter).sort({
