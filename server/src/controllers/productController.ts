@@ -9,7 +9,7 @@ export const getProducts = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { search, category } = req.query;
+    const { search, category, minPrice, maxPrice } = req.query;
 
     const filter: Record<string, unknown> = {};
 
@@ -22,6 +22,50 @@ export const getProducts = async (
 
     if (typeof category === "string" && category.trim()) {
       filter.category = category.trim();
+    }
+
+    const priceFilter: { $gte?: number; $lte?: number } = {};
+    
+    if (typeof minPrice === "string" && minPrice.trim() !== "") {
+      const parsedMinPrice = Number(minPrice);
+      if (!Number.isFinite(parsedMinPrice) || parsedMinPrice < 0) {
+        res.status(400).json({
+          success: false,
+          message: "minPrice must be a non-negative number.",
+        });
+        return;
+      }
+      
+      priceFilter.$gte = parsedMinPrice;
+    }
+    
+    if (typeof maxPrice === "string" && maxPrice.trim() !== "") {
+      const parsedMaxPrice = Number(maxPrice);
+      if (!Number.isFinite(parsedMaxPrice) || parsedMaxPrice < 0) {
+        res.status(400).json({
+          success: false,
+          message: "maxPrice must be a non-negative number.",
+        });
+        return;
+      }
+      
+      priceFilter.$lte = parsedMaxPrice;
+    }
+    
+    if (
+      priceFilter.$gte !== undefined &&
+      priceFilter.$lte !== undefined &&
+      priceFilter.$gte > priceFilter.$lte
+    ) {
+      res.status(400).json({
+        success: false,
+        message: "minPrice cannot be greater than maxPrice.",
+      });
+      return;
+    }
+    
+    if (Object.keys(priceFilter).length > 0) {
+      filter.price = priceFilter;
     }
 
     const products = await Product.find(filter).sort({
