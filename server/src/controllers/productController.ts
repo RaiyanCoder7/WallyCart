@@ -82,13 +82,45 @@ export const getProducts = async (
       sortOption = { healthScore: -1 };
     }
 
-    const products = await Product.find(filter).sort(sortOption);
+    const page = Number(req.query.page ?? 1);
+    const limit = Number(req.query.limit ?? 10);
 
-    res.status(200).json({
-      success: true,
-      count: products.length,
-      data: products,
-    });
+    if (!Number.isInteger(page) || page < 1) {
+      res.status(400).json({
+        success: false,
+        message: "page must be a positive integer.",
+      });
+      return;
+    }
+
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      res.status(400).json({
+        success: false,
+        message: "limit must be an integer between 1 and 100.",
+      });
+      return;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const total = await Product.countDocuments(filter);
+
+    const products = await Product.find(filter)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit);
+
+      res.status(200).json({
+        success: true,
+        count: products.length,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        data: products,
+      });
   } catch (error) {
     console.error("Failed to fetch products:", error);
 
