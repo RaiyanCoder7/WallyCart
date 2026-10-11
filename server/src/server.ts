@@ -21,6 +21,16 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("API Error:", err.message);
+
+  res.status(500).json({
+    success: false,
+    message: "Internal server error.",
+  });
+});
+
 const startServer = async (): Promise<void> => {
   try {
     await connectDatabase();
