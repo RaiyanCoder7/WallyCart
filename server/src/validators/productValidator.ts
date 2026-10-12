@@ -14,3 +14,11 @@ export const createProductSchema = z.object({
 
   healthScore: z.number().min(0).max(10),
 });
+
+
+export const updateProductSchema = createProductSchema.partial().refine(
+  (data) => Object.keys(data).length > 0,
+  {
+    message: "At least one field must be provided.",
+  }
+);

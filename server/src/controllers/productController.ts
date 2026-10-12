@@ -2,7 +2,10 @@
 import type { Request, Response } from "express";
 import Product from "../models/Product.js";
 import { Types } from "mongoose";
-import { createProductSchema } from "../validators/productValidator.js";
+import {
+  createProductSchema,
+  updateProductSchema,
+} from "../validators/productValidator.js";
 
 export const getProducts = async (
   req: Request,
@@ -223,6 +226,71 @@ export const updateProduct = async (
     });
   } catch (error) {
     console.error("Failed to update product:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to update product.",
+    });
+  }
+};
+
+
+export const patchProduct = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const productId = req.params.id;
+
+    if (
+      typeof productId !== "string" ||
+      !Types.ObjectId.isValid(productId)
+    ) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid product ID.",
+      });
+      return;
+    }
+
+    const result = updateProductSchema.safeParse(req.body);
+
+    if (!result.success) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid product data.",
+        errors: result.error.issues.map((issue) => ({
+          field: issue.path.join("."),
+          message: issue.message,
+        })),
+      });
+      return;
+    }
+
+    const product = await Product.findByIdAndUpdate(
+      productId,
+      { $set: result.data },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!product) {
+      res.status(404).json({
+        success: false,
+        message: "Product not found.",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully.",
+      data: product,
+    });
+  } catch (error) {
+    console.error("Failed to patch product:", error);
 
     res.status(500).json({
       success: false,
