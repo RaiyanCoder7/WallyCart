@@ -1,5 +1,16 @@
 export interface Product {
-  id: number;
+  id: string | number;
+  name: string;
+  category: string;
+  price: number;
+  image: string;
+  offer: string;
+  healthScore: number;
+}
+
+
+export interface ApiProduct {
+  _id: string;
   name: string;
   category: string;
   price: number;

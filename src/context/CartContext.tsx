@@ -13,8 +13,8 @@ import type {
 interface CartContextValue {
   cartItems: CartItem[];
   addToCart: (product: Product) => void;
-  updateQuantity: (id: number, change: number) => void;
-  removeItem: (id: number) => void;
+  updateQuantity: (id: Product["id"], change: number) => void;
+  removeItem: (id: Product["id"]) => void;
   totalItems: number;
   total: number;
 }
@@ -79,7 +79,7 @@ export const CartProvider = ({
   };
 
   const updateQuantity = (
-    id: number,
+    id: Product["id"],
     change: number
   ): void => {
     setCartItems((prev) =>
@@ -96,7 +96,7 @@ export const CartProvider = ({
     );
   };
 
-  const removeItem = (id: number): void => {
+  const removeItem = (id: Product["id"]): void => {
     setCartItems((prev) =>
       prev.filter((item) => item.id !== id)
     );

@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { FaArrowRight, FaLeaf, FaAppleAlt, FaBreadSlice, FaCoffee } from "react-icons/fa";
 
-import products from "../data/products";
-import { useCart } from "../context/CartContext";
+import { useEffect, useState } from "react";
+import { getProducts } from "../services/productService";
+import type { Product } from "../types";
 
 const categories = [
   {
@@ -29,7 +30,40 @@ const categories = [
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const data = await getProducts();
+
+        if (!cancelled) {
+          setProducts(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setError("Unable to load products. Please try again.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="home-page">
@@ -143,61 +177,73 @@ const HomePage = () => {
           </button>
         </div>
 
+        
         <div className="featured-product-grid">
-          {products.map((product) => (
-            <article
-              className="featured-product-card"
-              key={product.id}
-            >
+          {loading ? (
+            <p>Loading products...</p>
+          ) : error ? (
+            <div>
+              <p role="alert">{error}</p>
               <button
                 type="button"
-                className="featured-product-image"
-                onClick={() =>
-                  navigate(`/products/${product.id}`)
-                }
-                aria-label={`View ${product.name}`}
+                onClick={() => window.location.reload()}
               >
-                <img
-                  src={product.image}
-                  alt={product.name}
-                />
-
-                <span className="featured-offer">
-                  {product.offer}
-                </span>
+                Retry
               </button>
-
-              <div className="featured-product-info">
-                <span className="product-category">
-                  {product.category}
-                </span>
-
-                <button
-                  type="button"
-                  className="product-title-button"
-                  onClick={() =>
-                    navigate(`/products/${product.id}`)
-                  }
+            </div>
+          ) : products.length === 0 ? (
+            <p>No products available right now.</p>
+          ) : (
+            
+            products.map((product) => (
+              <article
+                className="featured-product-card"
+                key={product.id}
+              >
+                <div
+                  className="featured-product-image"
+                  onClick={() => navigate(`/products/${product.id}`)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      navigate(`/products/${product.id}`);
+                    }
+                  }}
                 >
-                  {product.name}
-                </button>
+                  <img src={product.image} alt={product.name} />
+                </div>
 
-                <div className="featured-product-bottom">
-                  <strong>₹{product.price}</strong>
+                <div className="featured-product-info">
+                  <span className="featured-product-category">
+                    {product.category}
+                  </span>
+
+                  <h3>{product.name}</h3>
+
+                  <div className="featured-product-bottom">
+                    <strong>₹{product.price}</strong>
+
+                    {product.offer && (
+                      <span className="featured-product-offer">
+                        {product.offer}
+                      </span>
+                    )}
+                  </div>
 
                   <button
                     type="button"
-                    className="quick-add-button"
-                    onClick={() => addToCart(product)}
-                    aria-label={`Add ${product.name} to cart`}
+                    className="featured-product-button"
+                    onClick={() => navigate(`/products/${product.id}`)}
                   >
-                    +
+                    View product <FaArrowRight />
                   </button>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            ))
+          )}
         </div>
+
       </section>
 
       {/* SMART SHOPPING */}
