@@ -38,6 +38,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   });
 });
 
+
 const startServer = async (): Promise<void> => {
   try {
     await connectDatabase();
@@ -47,10 +48,16 @@ const startServer = async (): Promise<void> => {
         `WallyCart API running at http://localhost:${PORT}`
       );
     });
-  } catch {
+  } catch (error: unknown) {
     console.error(
       "Server startup failed because the database could not be connected."
     );
+
+    console.error("Detailed error:", error);
+
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+    }
 
     process.exit(1);
   }

@@ -1,17 +1,53 @@
-import { useMemo, useState } from "react";
+
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import products from "../data/products";
+import { getProducts } from "../services/productService";
 import { useCart } from "../context/CartContext";
+import type { Product } from "../types";
 
 const ProductsPage = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] =
-    useState("All");
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const data = await getProducts();
+
+        if (!cancelled) {
+          setProducts(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setError("Unable to load products. Please try again.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const categories = [
     "All",
@@ -32,15 +68,11 @@ const ProductsPage = () => {
     });
 
     if (sortBy === "price-low") {
-      result = [...result].sort(
-        (a, b) => a.price - b.price
-      );
+      result = [...result].sort((a, b) => a.price - b.price);
     }
 
     if (sortBy === "price-high") {
-      result = [...result].sort(
-        (a, b) => b.price - a.price
-      );
+      result = [...result].sort((a, b) => b.price - a.price);
     }
 
     if (sortBy === "name") {
@@ -50,11 +82,10 @@ const ProductsPage = () => {
     }
 
     return result;
-  }, [search, selectedCategory, sortBy]);
+  }, [products, search, selectedCategory, sortBy]);
 
   return (
     <div className="products-page">
-
       <section className="products-header">
         <div>
           <span className="section-eyebrow">
@@ -70,12 +101,11 @@ const ProductsPage = () => {
         </div>
 
         <div className="products-count">
-          {filteredProducts.length} products
+          {loading ? "Loading products..." : `${filteredProducts.length} products`}
         </div>
       </section>
 
       <section className="products-toolbar">
-
         <div className="products-search">
           <span>⌕</span>
 
@@ -83,9 +113,7 @@ const ProductsPage = () => {
             type="search"
             placeholder="Search products..."
             value={search}
-            onChange={(event) =>
-              setSearch(event.target.value)
-            }
+            onChange={(event) => setSearch(event.target.value)}
             aria-label="Search products"
           />
         </div>
@@ -96,15 +124,10 @@ const ProductsPage = () => {
           aria-label="Sort products"
         >
           <option value="featured">Featured</option>
-          <option value="price-low">
-            Price: Low to High
-          </option>
-          <option value="price-high">
-            Price: High to Low
-          </option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
           <option value="name">Name: A to Z</option>
         </select>
-
       </section>
 
       <div className="products-categories">
@@ -124,7 +147,23 @@ const ProductsPage = () => {
         ))}
       </div>
 
-      {filteredProducts.length === 0 ? (
+      {loading ? (
+        <div className="products-empty">
+          <p>Loading products...</p>
+        </div>
+      ) : error ? (
+        <div className="products-empty">
+          <h2>Unable to load products</h2>
+          <p role="alert">{error}</p>
+
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </button>
+        </div>
+      ) : filteredProducts.length === 0 ? (
         <div className="products-empty">
           <h2>No products found</h2>
           <p>
@@ -155,14 +194,13 @@ const ProductsPage = () => {
                   navigate(`/products/${product.id}`)
                 }
               >
-                <img
-                  src={product.image}
-                  alt={product.name}
-                />
+                <img src={product.image} alt={product.name} />
 
-                <span className="featured-offer">
-                  {product.offer}
-                </span>
+                {product.offer && (
+                  <span className="featured-offer">
+                    {product.offer}
+                  </span>
+                )}
               </button>
 
               <div className="featured-product-info">
@@ -197,7 +235,6 @@ const ProductsPage = () => {
           ))}
         </div>
       )}
-
     </div>
   );
 };
