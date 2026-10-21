@@ -10,11 +10,13 @@ import type {
   Product,
 } from "../types";
 
+
 interface CartContextValue {
   cartItems: CartItem[];
   addToCart: (product: Product) => void;
   updateQuantity: (id: Product["id"], change: number) => void;
   removeItem: (id: Product["id"]) => void;
+  clearCart: () => void;
   totalItems: number;
   total: number;
 }
@@ -102,6 +104,11 @@ export const CartProvider = ({
     );
   };
 
+  
+  const clearCart = (): void => {
+    setCartItems([]);
+  };
+
   const totalItems = cartItems.reduce(
     (sum, item) => sum + item.quantity,
     0
@@ -120,6 +127,7 @@ export const CartProvider = ({
         addToCart,
         updateQuantity,
         removeItem,
+        clearCart,
         totalItems,
         total,
       }}

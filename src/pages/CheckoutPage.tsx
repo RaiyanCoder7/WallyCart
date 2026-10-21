@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext";
 
 interface AddressForm {
   fullName: string;
+  email: string;
   phone: string;
   address: string;
   city: string;
@@ -12,11 +13,12 @@ interface AddressForm {
 }
 
 const CheckoutPage = () => {
-  const { cartItems, total } = useCart();
+  const { cartItems, total, clearCart } = useCart();
   const navigate = useNavigate();
 
   const [form, setForm] = useState<AddressForm>({
     fullName: "",
+    email: "",
     phone: "",
     address: "",
     city: "",
@@ -24,6 +26,7 @@ const CheckoutPage = () => {
   });
 
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const deliveryFee = total >= 499 ? 0 : 40;
   const grandTotal = total + deliveryFee;
@@ -43,10 +46,13 @@ const CheckoutPage = () => {
     setError("");
   };
 
-  const handleSubmit = (
+  
+  const handleSubmit = async (
     event: React.FormEvent<HTMLFormElement>
-  ) => {
+  ): Promise<void> => {
     event.preventDefault();
+
+    if (isSubmitting) return;
 
     if (cartItems.length === 0) {
       setError("Your cart is empty.");
@@ -63,9 +69,85 @@ const CheckoutPage = () => {
       return;
     }
 
-    // Temporary frontend-only behavior.
-    // Real order creation will be implemented with the backend.
-    navigate("/order-success");
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customer: {
+            name: form.fullName.trim(),
+            email: form.email.trim(),
+            phone: form.phone.trim(),
+            address: `${form.address.trim()}, ${form.city.trim()}, ${form.pincode.trim()}`,
+          },
+          items: cartItems.map((item) => ({
+            productId: String(item.id),
+            quantity: item.quantity,
+          })),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        const validationMessage = Array.isArray(result.errors)
+          ? result.errors
+            .map((issue: { message: string }) => issue.message)
+            .join(" ")
+          : "";
+
+        throw new Error(
+          validationMessage ||
+            result.message ||
+            "Unable to place your order. Please try again."
+        );
+      }
+
+      if (!result.success || !result.data?._id) {
+        throw new Error(
+          "The server response did not confirm order creation."
+        );
+      }
+
+      if (!result.accessToken) {
+        throw new Error("Order created, but the access token is missing.");
+      }
+
+      sessionStorage.setItem(
+        "wallycart-last-order-access-token",
+        result.accessToken
+      );
+
+      sessionStorage.setItem(
+        "wallycart-last-order-id",
+        result.data._id
+      );
+
+      clearCart();
+
+      navigate("/order-success", {
+        state: { order: result.data },
+      });
+    } catch (err: unknown) {
+      if (err instanceof TypeError) {
+        setError(
+          "Unable to connect to the server. Check that the backend is running."
+        );
+      } else {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Something went wrong while placing your order."
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (cartItems.length === 0) {
@@ -109,6 +191,20 @@ const CheckoutPage = () => {
                 value={form.fullName}
                 onChange={handleChange}
                 placeholder="Enter your full name"
+                required
+              />
+            </div>
+
+            <div className="checkout-field">
+              <label htmlFor="email">Email Address</label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="you@example.com"
+                autoComplete="email"
                 required
               />
             </div>
@@ -223,8 +319,9 @@ const CheckoutPage = () => {
             <button
               type="submit"
               className="checkout-button"
+              disabled={isSubmitting}
             >
-              Place Order
+              {isSubmitting ? "Placing Order..." : "Place Order"}
             </button>
 
             <p className="checkout-note">
