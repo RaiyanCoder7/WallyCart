@@ -12,7 +12,8 @@ export const createOrderSchema = z
       .trim()
       .regex(/^[6-9]\d{9}$/, "Please provide a valid Indian mobile number"),
     address: z.string().trim().min(5, "Delivery address must be at least 5 characters"),
-  }),
+  })
+  .strict(),
 
     items: z
       .array(
@@ -24,6 +25,7 @@ export const createOrderSchema = z
             .min(1, "Quantity must be at least 1")
             .max(100, "Quantity cannot exceed 100"),
         })
+        .strict()
       )
       .min(1, "An order must contain at least one item"),
   })
