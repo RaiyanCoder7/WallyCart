@@ -10,6 +10,8 @@ import orderRoutes from "./routes/orderRoutes.js";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 const PORT = Number(process.env.PORT) || 5000;
 let databaseConnection: Promise<void> | null = null;
 
