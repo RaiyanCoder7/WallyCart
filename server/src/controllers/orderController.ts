@@ -107,7 +107,7 @@ export const createOrder = async (
     res.status(201).json({
       success: true,
       message: "Order created successfully.",
-      data: order,
+      data: safeOrder,
       accessToken,
     });
   } catch (error) {
