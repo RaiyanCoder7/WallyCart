@@ -106,6 +106,12 @@ export const getProducts = async (
 
     const skip = (page - 1) * limit;
 
+    console.log("Product database diagnostic:", {
+      database: Product.db.name,
+      collection: Product.collection.name,
+      filter,
+    });
+
     const total = await Product.countDocuments(filter);
 
     const products = await Product.find(filter)
