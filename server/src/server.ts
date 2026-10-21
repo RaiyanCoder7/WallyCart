@@ -48,6 +48,9 @@ app.use(express.json({ limit: "100kb" }));
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 100,
+  validate: {
+    forwardedHeader: false,
+  },
   standardHeaders: "draft-8",
   legacyHeaders: false,
   message: {
