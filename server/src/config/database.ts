@@ -15,6 +15,12 @@ export const connectDatabase = async (): Promise<void> => {
       serverSelectionTimeoutMS: 10000,
     });
 
+    console.log("MongoDB connection diagnostic:", {
+      database: mongoose.connection.name,
+      host: mongoose.connection.host,
+      readyState: mongoose.connection.readyState,
+    });
+
     console.log("MongoDB connected successfully");
   } catch (error: unknown) {
     console.error("MongoDB connection failed.");
