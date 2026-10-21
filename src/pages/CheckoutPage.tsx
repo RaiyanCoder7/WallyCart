@@ -16,6 +16,9 @@ const CheckoutPage = () => {
   const { cartItems, total, clearCart } = useCart();
   const navigate = useNavigate();
 
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
   const [form, setForm] = useState<AddressForm>({
     fullName: "",
     email: "",
@@ -73,7 +76,7 @@ const CheckoutPage = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/orders", {
+      const response = await fetch(`${API_BASE_URL}/api/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -37,6 +37,8 @@ interface OrderSuccessLocationState {
 }
 
 const OrderSuccessPage = () => {
+  const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -76,9 +78,7 @@ const OrderSuccessPage = () => {
     const fetchOrder = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/orders/${encodeURIComponent(
-            savedOrderId
-          )}`,
+          `${API_BASE_URL}/api/orders/${encodeURIComponent(savedOrderId)}`,
           {
             headers: {
               "x-order-access-token": savedOrderAccessToken,
