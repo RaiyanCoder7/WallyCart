@@ -106,10 +106,11 @@ export const getProducts = async (
 
     const skip = (page - 1) * limit;
 
-    console.log("Product database diagnostic:", {
+    const diagnosticCount = await Product.countDocuments({});
+      console.log("Product count diagnostic:", {
       database: Product.db.name,
       collection: Product.collection.name,
-      filter,
+      count: diagnosticCount,
     });
 
     const total = await Product.countDocuments(filter);
