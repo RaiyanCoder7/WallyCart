@@ -106,16 +106,6 @@ export const getProducts = async (
 
     const skip = (page - 1) * limit;
 
-    console.log("Mongoose connection details:", {
-      database: Product.db.name,
-      collection: Product.collection.name,
-      modelName: Product.modelName,
-      readyState: Product.db.readyState,
-    });
-
-    const allProductsCount = await Product.collection.countDocuments({});
-    console.log("Raw collection count:", allProductsCount);
-
     const total = await Product.countDocuments(filter);
 
     const products = await Product.find(filter)
