@@ -189,3 +189,89 @@ export const getOrderById = async (
     });
   }
 };
+
+
+const allowedStatusTransitions: Record<string, string[]> = {
+  pending: ["confirmed", "cancelled"],
+  confirmed: ["shipped", "cancelled"],
+  shipped: ["delivered"],
+  delivered: [],
+  cancelled: [],
+};
+
+export const updateOrderStatus = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const id = req.params.id;
+    const { status } = req.body as { status?: unknown };
+
+    if (typeof id !== "string" || !/^[a-f\d]{24}$/i.test(id)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid order ID.",
+      });
+      return;
+    }
+
+    const validStatuses = [
+      "pending",
+      "confirmed",
+      "shipped",
+      "delivered",
+      "cancelled",
+    ];
+
+    if (
+      typeof status !== "string" ||
+      !validStatuses.includes(status)
+    ) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid order status.",
+        allowedStatuses: validStatuses,
+      });
+      return;
+    }
+
+    const order = await Order.findById(id);
+
+    if (!order) {
+      res.status(404).json({
+        success: false,
+        message: "Order not found.",
+      });
+      return;
+    }
+
+    const allowedTransitions = allowedStatusTransitions[order.status] ?? [];
+
+    if (!allowedTransitions.includes(status)) {
+      res.status(409).json({
+        success: false,
+        message: `Cannot change order status from "${order.status}" to "${status}".`,
+      });
+      return;
+    }
+
+    order.status = status as typeof order.status;
+    await order.save();
+
+    const savedOrder = order.toObject();
+    const { accessTokenHash: _hiddenHash, ...safeOrder } = savedOrder;
+
+    res.status(200).json({
+      success: true,
+      message: "Order status updated successfully.",
+      data: safeOrder,
+    });
+  } catch (error) {
+    console.error("Failed to update order status:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to update order status.",
+    });
+  }
+};
