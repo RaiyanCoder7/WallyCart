@@ -1,4 +1,4 @@
-
+import type {} from "../types/express-session.js";
 import session from "express-session";
 import MongoStore from "connect-mongo";
 
