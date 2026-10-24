@@ -275,3 +275,29 @@ export const updateOrderStatus = async (
     });
   }
 };
+
+
+export const getAllOrders = async (
+  _req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const orders = await Order.find()
+      .select("-accessTokenHash")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      data: orders,
+    });
+  } catch (error) {
+    console.error("Failed to retrieve admin orders:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to retrieve orders.",
+    });
+  }
+};

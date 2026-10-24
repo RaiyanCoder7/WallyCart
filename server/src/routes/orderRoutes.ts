@@ -3,9 +3,10 @@ import { Router } from "express";
 import {
   createOrder,
   getOrderById,
+  getAllOrders,
   updateOrderStatus,
 } from "../controllers/orderController.js";
-import { requireAdmin } from "../middleware/adminAuth.js";
+import { requireAdminSession } from "../middleware/requireAdminSession.js";
 
 const router = Router();
 
@@ -13,7 +14,8 @@ const router = Router();
 router.post("/", createOrder);
 router.get("/:id", getOrderById);
 
-// Admin-only endpoint
-router.patch("/:id/status", requireAdmin, updateOrderStatus);
+// Admin-only endpoints
+router.get("/", requireAdminSession, getAllOrders);
+router.patch("/:id/status", requireAdminSession, updateOrderStatus);
 
 export default router;

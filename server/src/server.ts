@@ -1,12 +1,13 @@
-
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import { sessionMiddleware } from "./config/session.js";
 import rateLimit from "express-rate-limit";
 import { connectDatabase } from "./config/database.js";
 import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
 
@@ -31,13 +32,18 @@ app.use(helmet());
 
 // Configure CORS.
 // Set FRONTEND_URL in your server environment when deploying.
-const allowedOrigin = process.env.FRONTEND_URL;
+const allowedOrigins = [
+  "http://localhost:5173",
+  ...(process.env.FRONTEND_URL ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+];
 
 app.use(
   cors({
-    origin: allowedOrigin
-      ? allowedOrigin.split(",").map((origin) => origin.trim())
-      : "http://localhost:5173",
+    origin: allowedOrigins,
+    credentials: true,
   })
 );
 
@@ -77,6 +83,12 @@ app.use(async (_req, _res, next) => {
     next(error);
   }
 });
+
+// Secure admin session middleware
+app.use(sessionMiddleware);
+
+// Admin authentication routes
+app.use("/api/admin", adminRoutes);
 
 // Product and order routes
 app.use("/api/products", productRoutes);
