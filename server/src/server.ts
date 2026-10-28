@@ -33,17 +33,22 @@ app.use(helmet());
 // Configure CORS.
 // Set FRONTEND_URL in your server environment when deploying.
 const allowedOrigins = [
+  "https://wallycart.vercel.app",
   "http://localhost:5173",
-  ...(process.env.FRONTEND_URL ?? "")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean),
 ];
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Origin not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
